@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member ID Filler App v1.2 - Full Review</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: #d9e1ea;
+      --text: #1f2d3d;
+      --muted: #607080;
+      --accent: #1b5fa7;
+      --accent2: #2e7d32;
+      --warn: #b26a00;
+      --danger: #a52828;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1240px;
+      margin: 20px auto;
+      padding: 0 16px 32px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+    .sub { color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select, input[type="file"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fff;
+    }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+    button.secondary { background: #586777; }
+    button.success { background: var(--accent2); }
+    button.warn { background: var(--warn); }
+    button:disabled {
+      background: #aab4bf;
+      cursor: not-allowed;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+    .stat .n { font-size: 28px; font-weight: 700; margin-top: 8px; }
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eef5ff;
+      border: 1px solid #c9dbf5;
+      line-height: 1.35;
+    }
+    .status.warn {
+      background: #fff7e8;
+      border-color: #f0d59d;
+    }
+    .status.good {
+      background: #edf8ef;
+      border-color: #b9dfbf;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-height: 620px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+    }
+    th, td {
+      border-bottom: 1px solid #e5ebf1;
+      border-right: 1px solid #eef2f6;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #eef4fa;
+      z-index: 1;
+    }
+    tr.changed { background: #eefbf0; }
+    .footer {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+    .small { font-size: 13px; color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 99px;
+      font-size: 12px;
+      background: #edf8ef;
+      color: #246a2b;
+      border: 1px solid #c6e6ca;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+    .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; }
+    .toolbar .btnrow button { margin: 0; padding: 10px 12px; }
+    .review-note {
+      margin: 8px 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .dangerText { color: var(--danger); font-weight: 700; }
+    .rownum {
+      background: #f6f8fb;
+      color: var(--muted);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Member ID Filler App v1.2 - Full Review</h1>
+      <div class="sub">
+        Load an Excel file, copy <b>User ID</b> into blank <b>Member ID</b> cells only, review every row using paging/search, then save.
+        This version preserves the original worksheet and changes only the blank Member ID cells.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>1) Load file</h2>
+      <div class="grid">
+        <div>
+          <label for="fileInput">Excel file</label>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm" />
+        </div>
+        <div>
+          <label for="sheetSelect">Worksheet</label>
+          <select id="sheetSelect" disabled></select>
+        </div>
+        <div>
+          <label for="saveName">Save as file name</label>
+          <input type="text" id="saveName" value="member_id_fixed.xlsx" />
+        </div>
+      </div>
+      <div>
+        <button id="loadBtn">Load Selected Sheet</button>
+        <button id="processBtn" disabled>Fill Blank Member IDs</button>
+        <button id="saveBtn" class="success" disabled>Save Corrected File</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+      <div id="status" class="status">Choose a file first. Expected column names: <b>User ID</b> and <b>Member ID</b>.</div>
+      <div class="footer">© 2026 Glen Carruthers. All rights reserved.</div>
+    </div>
+
+    <div class="panel">
+      <h2>2) Results</h2>
+      <div class="stats">
+        <div class="stat"><div>Rows loaded</div><div class="n" id="rowsLoaded">0</div></div>
+        <div class="stat"><div>Blanks filled</div><div class="n" id="blanksFilled">0</div></div>
+        <div class="stat"><div>Unchanged populated Member IDs</div><div class="n" id="unchangedCount">0</div></div>
+        <div class="stat"><div>Rows still blank</div><div class="n" id="stillBlankCount">0</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>3) Review entire file</h2>
+      <div class="toolbar">
+        <div>
+          <label for="searchBox">Search review</label>
+          <input type="text" id="searchBox" placeholder="Search any visible cell..." disabled />
+        </div>
+        <div>
+          <label for="rowsPerPage">Rows per page</label>
+          <select id="rowsPerPage" disabled>
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+            <option value="all">Show all rows</option>
+          </select>
+        </div>
+        <div>
+          <label for="pageJump">Jump to page</label>
+          <input type="number" id="pageJump" min="1" value="1" disabled />
+        </div>
+        <div class="btnrow">
+          <button id="firstPageBtn" disabled>First</button>
+          <button id="prevPageBtn" disabled>Previous</button>
+          <button id="nextPageBtn" disabled>Next</button>
+          <button id="lastPageBtn" disabled>Last</button>
+        </div>
+      </div>
+      <div class="review-note" id="reviewInfo">No file loaded yet.</div>
+      <div class="table-wrap">
+        <table id="previewTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const saveName = document.getElementById('saveName');
+    const loadBtn = document.getElementById('loadBtn');
+    const processBtn = document.getElementById('processBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusBox = document.getElementById('status');
+    const rowsLoaded = document.getElementById('rowsLoaded');
+    const blanksFilled = document.getElementById('blanksFilled');
+    const unchangedCount = document.getElementById('unchangedCount');
+    const stillBlankCount = document.getElementById('stillBlankCount');
+    const previewThead = document.querySelector('#previewTable thead');
+    const previewTbody = document.querySelector('#previewTable tbody');
+    const searchBox = document.getElementById('searchBox');
+    const rowsPerPage = document.getElementById('rowsPerPage');
+    const pageJump = document.getElementById('pageJump');
+    const firstPageBtn = document.getElementById('firstPageBtn');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const lastPageBtn = document.getElementById('lastPageBtn');
+    const reviewInfo = document.getElementById('reviewInfo');
+
+    let workbook = null;
+    let currentSheetName = '';
+    let headerRowIndex = 0;
+    let headerNames = [];
+    let displayRows = [];
+    let changedExcelRows = new Set();
+    let userIdColIndex = -1;
+    let memberIdColIndex = -1;
+    let currentPage = 1;
+    let originalFileName = '';
+
+    function setStatus(msg, type = '') {
+      statusBox.className = 'status' + (type ? ' ' + type : '');
+      statusBox.innerHTML = msg;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function norm(value) {
+      return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function resetAll() {
+      workbook = null;
+      currentSheetName = '';
+      headerRowIndex = 0;
+      headerNames = [];
+      displayRows = [];
+      changedExcelRows = new Set();
+      userIdColIndex = -1;
+      memberIdColIndex = -1;
+      currentPage = 1;
+      originalFileName = '';
+      sheetSelect.innerHTML = '';
+      sheetSelect.disabled = true;
+      processBtn.disabled = true;
+      saveBtn.disabled = true;
+      searchBox.value = '';
+      searchBox.disabled = true;
+      rowsPerPage.disabled = true;
+      pageJump.disabled = true;
+      firstPageBtn.disabled = true;
+      prevPageBtn.disabled = true;
+      nextPageBtn.disabled = true;
+      lastPageBtn.disabled = true;
+      rowsLoaded.textContent = '0';
+      blanksFilled.textContent = '0';
+      unchangedCount.textContent = '0';
+      stillBlankCount.textContent = '0';
+      reviewInfo.textContent = 'No file loaded yet.';
+      previewThead.innerHTML = '';
+      previewTbody.innerHTML = '';
+      setStatus('Choose a file first. Expected column names: <b>User ID</b> and <b>Member ID</b>.');
+    }
+
+    async function readWorkbook(file) {
+      const buffer = await file.arrayBuffer();
+      return XLSX.read(buffer, { type: 'array', cellDates: true, cellNF: true, cellText: true });
+    }
+
+    function findHeaderRow(aoa) {
+      for (let r = 0; r < Math.min(20, aoa.length); r++) {
+        const row = aoa[r] || [];
+        const hasUser = row.some(c => norm(c) === 'user id');
+        const hasMember = row.some(c => norm(c) === 'member id');
+        if (hasUser && hasMember) return r;
+      }
+      return 0;
+    }
+
+    function getCellDisplay(ws, r, c) {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = ws[addr];
+      if (!cell) return '';
+      if (cell.w !== undefined) return cell.w;
+      if (cell.v !== undefined) return cell.v;
+      return '';
+    }
+
+    function getCellRaw(ws, r, c) {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = ws[addr];
+      if (!cell) return '';
+      return cell.v ?? '';
+    }
+
+    function loadSheetData(sheetName) {
+      const ws = workbook.Sheets[sheetName];
+      if (!ws || !ws['!ref']) throw new Error('Selected sheet has no data.');
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false, blankrows: false });
+      if (!aoa.length) throw new Error('Selected sheet has no data rows.');
+
+      headerRowIndex = findHeaderRow(aoa);
+      headerNames = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const val = getCellDisplay(ws, headerRowIndex, c);
+        headerNames.push(val ? String(val) : 'Column ' + XLSX.utils.encode_col(c));
+      }
+
+      userIdColIndex = headerNames.findIndex(h => norm(h) === 'user id');
+      memberIdColIndex = headerNames.findIndex(h => norm(h) === 'member id');
+      if (userIdColIndex < 0 || memberIdColIndex < 0) {
+        throw new Error('Could not find required columns. The sheet must contain headers named User ID and Member ID.');
+      }
+
+      currentSheetName = sheetName;
+      changedExcelRows = new Set();
+      displayRows = [];
+
+      for (let r = headerRowIndex + 1; r <= range.e.r; r++) {
+        const values = [];
+        let hasAnyValue = false;
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const val = getCellDisplay(ws, r, c);
+          if (String(val ?? '').trim() !== '') hasAnyValue = true;
+          values.push(val);
+        }
+        if (hasAnyValue) {
+          displayRows.push({ excelRow: r + 1, values, changed: false });
+        }
+      }
+
+      rowsLoaded.textContent = String(displayRows.length);
+      blanksFilled.textContent = '0';
+      unchangedCount.textContent = '0';
+      stillBlankCount.textContent = '0';
+      processBtn.disabled = false;
+      saveBtn.disabled = true;
+      enableReviewControls(true);
+      currentPage = 1;
+      renderPreview();
+      setStatus(`Loaded <b>${escapeHtml(sheetName)}</b>. Found columns <b>${escapeHtml(headerNames[userIdColIndex])}</b> and <b>${escapeHtml(headerNames[memberIdColIndex])}</b>. Ready to process.`, 'good');
+    }
+
+    function enableReviewControls(enabled) {
+      searchBox.disabled = !enabled;
+      rowsPerPage.disabled = !enabled;
+      pageJump.disabled = !enabled;
+      firstPageBtn.disabled = !enabled;
+      prevPageBtn.disabled = !enabled;
+      nextPageBtn.disabled = !enabled;
+      lastPageBtn.disabled = !enabled;
+    }
+
+    function filteredRows() {
+      const q = norm(searchBox.value);
+      if (!q) return displayRows;
+      return displayRows.filter(row => row.values.some(v => norm(v).includes(q)) || String(row.excelRow).includes(q));
+    }
+
+    function renderPreview() {
+      previewThead.innerHTML = '';
+      previewTbody.innerHTML = '';
+      if (!displayRows.length) {
+        reviewInfo.textContent = 'No rows to display.';
+        return;
+      }
+
+      const rows = filteredRows();
+      const perPageSetting = rowsPerPage.value;
+      const showAll = perPageSetting === 'all';
+      const perPage = showAll ? rows.length || 1 : parseInt(perPageSetting, 10);
+      const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = showAll ? 0 : (currentPage - 1) * perPage;
+      const end = showAll ? rows.length : Math.min(start + perPage, rows.length);
+      const pageRows = rows.slice(start, end);
+
+      const headRow = document.createElement('tr');
+      const rn = document.createElement('th');
+      rn.textContent = 'Excel Row';
+      headRow.appendChild(rn);
+      headerNames.forEach(h => {
+        const th = document.createElement('th');
+        th.innerHTML = escapeHtml(h);
+        headRow.appendChild(th);
+      });
+      const th = document.createElement('th');
+      th.textContent = 'Status';
+      headRow.appendChild(th);
+      previewThead.appendChild(headRow);
+
+      pageRows.forEach(row => {
+        const tr = document.createElement('tr');
+        if (row.changed) tr.classList.add('changed');
+        const rowNumTd = document.createElement('td');
+        rowNumTd.className = 'rownum';
+        rowNumTd.textContent = row.excelRow;
+        tr.appendChild(rowNumTd);
+        row.values.forEach(v => {
+          const td = document.createElement('td');
+          td.innerHTML = escapeHtml(v);
+          tr.appendChild(td);
+        });
+        const statusTd = document.createElement('td');
+        statusTd.innerHTML = row.changed ? '<span class="pill">Filled from User ID</span>' : '';
+        tr.appendChild(statusTd);
+        previewTbody.appendChild(tr);
+      });
+
+      pageJump.value = String(currentPage);
+      pageJump.max = String(totalPages);
+      firstPageBtn.disabled = currentPage <= 1 || showAll;
+      prevPageBtn.disabled = currentPage <= 1 || showAll;
+      nextPageBtn.disabled = currentPage >= totalPages || showAll;
+      lastPageBtn.disabled = currentPage >= totalPages || showAll;
+
+      if (showAll && rows.length > 2000) {
+        reviewInfo.innerHTML = `Showing <b>${rows.length}</b> matching row(s). <span class="dangerText">Large full-file display may slow the browser.</span>`;
+      } else {
+        reviewInfo.innerHTML = `Showing row <b>${rows.length ? start + 1 : 0}</b> to <b>${end}</b> of <b>${rows.length}</b> matching row(s). Page <b>${currentPage}</b> of <b>${totalPages}</b>. Total loaded rows: <b>${displayRows.length}</b>.`;
+      }
+    }
+
+    fileInput.addEventListener('change', async () => {
+      resetAll();
+      const file = fileInput.files[0];
+      if (!file) return;
+      originalFileName = file.name;
+      saveName.value = file.name.replace(/\.(xlsx|xls|xlsm)$/i, '') + '_fixed.xlsx';
+      setStatus('Reading file...');
+      try {
+        workbook = await readWorkbook(file);
+        sheetSelect.innerHTML = '';
+        workbook.SheetNames.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          sheetSelect.appendChild(option);
+        });
+        sheetSelect.disabled = false;
+        setStatus(`File loaded. Found <b>${workbook.SheetNames.length}</b> sheet(s). Select the sheet if needed, then click <b>Load Selected Sheet</b>.`, 'good');
+      } catch (err) {
+        setStatus('Could not read that file. ' + escapeHtml(err.message), 'warn');
+      }
+    });
+
+    loadBtn.addEventListener('click', () => {
+      try {
+        if (!workbook) {
+          setStatus('Please choose a file first.', 'warn');
+          return;
+        }
+        loadSheetData(sheetSelect.value);
+      } catch (err) {
+        setStatus(escapeHtml(err.message), 'warn');
+      }
+    });
+
+    processBtn.addEventListener('click', () => {
+      if (!workbook || !currentSheetName || !displayRows.length) {
+        setStatus('No loaded rows to process.', 'warn');
+        return;
+      }
+
+      const ws = workbook.Sheets[currentSheetName];
+      let filled = 0;
+      let unchanged = 0;
+      let stillBlank = 0;
+      changedExcelRows = new Set();
+
+      displayRows.forEach(row => {
+        const rZero = row.excelRow - 1;
+        const memberAddr = XLSX.utils.encode_cell({ r: rZero, c: memberIdColIndex });
+        const userAddr = XLSX.utils.encode_cell({ r: rZero, c: userIdColIndex });
+        const memberCell = ws[memberAddr];
+        const userCell = ws[userAddr];
+        const memberVal = memberCell ? String(memberCell.v ?? '').trim() : '';
+        const userVal = userCell ? String(userCell.v ?? '').trim() : '';
+        row.changed = false;
+
+        if (memberVal === '') {
+          if (userVal !== '' && userCell) {
+            // Preserve the User ID cell type/style as closely as possible for the copied value.
+            ws[memberAddr] = { ...userCell, v: userCell.v, w: userCell.w };
+            row.values[memberIdColIndex] = getCellDisplay(ws, rZero, memberIdColIndex);
+            row.changed = true;
+            changedExcelRows.add(row.excelRow);
+            filled++;
+          } else {
+            stillBlank++;
+          }
+        } else {
+          unchanged++;
+        }
+      });
+
+      rowsLoaded.textContent = String(displayRows.length);
+      blanksFilled.textContent = String(filled);
+      unchangedCount.textContent = String(unchanged);
+      stillBlankCount.textContent = String(stillBlank);
+      saveBtn.disabled = false;
+      currentPage = 1;
+      renderPreview();
+      setStatus(`Processing complete. Filled <b>${filled}</b> blank Member ID cell(s). Existing Member ID values and date formats were left unchanged.`, 'good');
+    });
+
+    saveBtn.addEventListener('click', () => {
+      if (!workbook || !currentSheetName) {
+        setStatus('Nothing to save yet.', 'warn');
+        return;
+      }
+
+      let outName = saveName.value.trim();
+      if (!outName) outName = 'member_id_fixed.xlsx';
+      if (!/\.(xlsx|xlsm|xls)$/i.test(outName)) outName += '.xlsx';
+      XLSX.writeFile(workbook, outName, { bookType: 'xlsx', cellDates: true });
+      setStatus(`Saved corrected file as <b>${escapeHtml(outName)}</b>.`, 'good');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      saveName.value = 'member_id_fixed.xlsx';
+      resetAll();
+    });
+
+    searchBox.addEventListener('input', () => { currentPage = 1; renderPreview(); });
+    rowsPerPage.addEventListener('change', () => { currentPage = 1; renderPreview(); });
+    pageJump.addEventListener('change', () => {
+      const requested = parseInt(pageJump.value, 10);
+      if (!Number.isNaN(requested)) currentPage = requested;
+      renderPreview();
+    });
+    firstPageBtn.addEventListener('click', () => { currentPage = 1; renderPreview(); });
+    prevPageBtn.addEventListener('click', () => { currentPage--; renderPreview(); });
+    nextPageBtn.addEventListener('click', () => { currentPage++; renderPreview(); });
+    lastPageBtn.addEventListener('click', () => {
+      const rows = filteredRows();
+      const perPage = rowsPerPage.value === 'all' ? rows.length || 1 : parseInt(rowsPerPage.value, 10);
+      currentPage = Math.max(1, Math.ceil(rows.length / perPage));
+      renderPreview();
+    });
+
+    resetAll();
+  </script>
+</body>
+</html>
