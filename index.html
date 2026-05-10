@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member ID Filler App v1.1</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: #d9e1ea;
+      --text: #1f2d3d;
+      --muted: #607080;
+      --accent: #1b5fa7;
+      --accent2: #2e7d32;
+      --warn: #b26a00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 20px auto;
+      padding: 0 16px 32px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+    .sub { color: var(--muted); margin-top: 6px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    input[type="text"], select, input[type="file"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fff;
+    }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+    button.secondary { background: #586777; }
+    button.success { background: var(--accent2); }
+    button:disabled {
+      background: #aab4bf;
+      cursor: not-allowed;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+    .stat .n { font-size: 28px; font-weight: 700; margin-top: 8px; }
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eef5ff;
+      border: 1px solid #c9dbf5;
+    }
+    .status.warn {
+      background: #fff7e8;
+      border-color: #f0d59d;
+    }
+    .status.good {
+      background: #edf8ef;
+      border-color: #b9dfbf;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-height: 520px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+    }
+    th, td {
+      border-bottom: 1px solid #e5ebf1;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #eef4fa;
+      z-index: 1;
+    }
+    tr.changed { background: #eefbf0; }
+    .footer {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+    .small { font-size: 13px; color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 99px;
+      font-size: 12px;
+      background: #edf8ef;
+      color: #246a2b;
+      border: 1px solid #c6e6ca;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Member ID Filler App v1.1</h1>
+      <div class="sub">Load an Excel file, copy <b>User ID</b> into blank <b>Member ID</b> cells only, preview the changes, then save while preserving date values and formats as much as possible.</div>
+    </div>
+
+    <div class="panel">
+      <h2>1) Load file</h2>
+      <div class="grid">
+        <div>
+          <label for="fileInput">Excel or CSV file</label>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+        </div>
+        <div>
+          <label for="sheetSelect">Worksheet</label>
+          <select id="sheetSelect" disabled></select>
+        </div>
+        <div>
+          <label for="saveName">Save as file name</label>
+          <input type="text" id="saveName" value="member_id_fixed.xlsx" />
+        </div>
+      </div>
+      <div>
+        <button id="loadBtn">Load Selected Sheet</button>
+        <button id="processBtn" disabled>Fill Blank Member IDs</button>
+        <button id="saveBtn" class="success" disabled>Save Corrected File</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+      <div id="status" class="status">Choose a file first. Expected column names: <b>User ID</b> and <b>Member ID</b>.</div>
+      <div class="footer">© 2026 Glen Carruthers. All rights reserved.</div>
+    </div>
+
+    <div class="panel">
+      <h2>2) Results</h2>
+      <div class="stats">
+        <div class="stat"><div>Rows loaded</div><div class="n" id="rowsLoaded">0</div></div>
+        <div class="stat"><div>Blanks filled</div><div class="n" id="blanksFilled">0</div></div>
+        <div class="stat"><div>Unchanged populated Member IDs</div><div class="n" id="unchangedCount">0</div></div>
+        <div class="stat"><div>Rows still blank</div><div class="n" id="stillBlankCount">0</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>3) Preview <span class="small">(changed rows are highlighted)</span></h2>
+      <div class="table-wrap">
+        <table id="previewTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const saveName = document.getElementById('saveName');
+    const loadBtn = document.getElementById('loadBtn');
+    const processBtn = document.getElementById('processBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusBox = document.getElementById('status');
+    const rowsLoaded = document.getElementById('rowsLoaded');
+    const blanksFilled = document.getElementById('blanksFilled');
+    const unchangedCount = document.getElementById('unchangedCount');
+    const stillBlankCount = document.getElementById('stillBlankCount');
+    const previewThead = document.querySelector('#previewTable thead');
+    const previewTbody = document.querySelector('#previewTable tbody');
+
+    let workbook = null;
+    let originalData = [];
+    let workingData = [];
+    let currentSheetName = '';
+    let userIdKey = null;
+    let memberIdKey = null;
+    let originalFileName = '';
+
+    function setStatus(msg, type = '') {
+      statusBox.className = 'status' + (type ? ' ' + type : '');
+      statusBox.innerHTML = msg;
+    }
+
+    function resetAll() {
+      workbook = null;
+      originalData = [];
+      workingData = [];
+      currentSheetName = '';
+      userIdKey = null;
+      memberIdKey = null;
+      originalFileName = '';
+      sheetSelect.innerHTML = '';
+      sheetSelect.disabled = true;
+      processBtn.disabled = true;
+      saveBtn.disabled = true;
+      rowsLoaded.textContent = '0';
+      blanksFilled.textContent = '0';
+      unchangedCount.textContent = '0';
+      stillBlankCount.textContent = '0';
+      previewThead.innerHTML = '';
+      previewTbody.innerHTML = '';
+      setStatus('Choose a file first. Expected column names: <b>User ID</b> and <b>Member ID</b>.');
+    }
+
+    function detectColumn(headers, target) {
+      const norm = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const exact = headers.find(h => norm(h) === norm(target));
+      if (exact) return exact;
+      return null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderPreview(data) {
+      previewThead.innerHTML = '';
+      previewTbody.innerHTML = '';
+      if (!data.length) return;
+
+      const headers = Object.keys(data[0]).filter(k => k !== '__changed');
+      const headRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.innerHTML = escapeHtml(h);
+        headRow.appendChild(th);
+      });
+      const th = document.createElement('th');
+      th.textContent = 'Status';
+      headRow.appendChild(th);
+      previewThead.appendChild(headRow);
+
+      const maxRows = Math.min(data.length, 500);
+      for (let i = 0; i < maxRows; i++) {
+        const row = data[i];
+        const tr = document.createElement('tr');
+        if (row.__changed) tr.classList.add('changed');
+        headers.forEach(h => {
+          const td = document.createElement('td');
+          td.innerHTML = escapeHtml(row[h]);
+          tr.appendChild(td);
+        });
+        const statusTd = document.createElement('td');
+        statusTd.innerHTML = row.__changed ? '<span class="pill">Filled from User ID</span>' : '';
+        tr.appendChild(statusTd);
+        previewTbody.appendChild(tr);
+      }
+    }
+
+    async function readWorkbook(file) {
+      const buffer = await file.arrayBuffer();
+      return XLSX.read(buffer, { type: 'array', cellDates: true });
+    }
+
+    function loadSheetData(sheetName) {
+      const ws = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(ws, { defval: '', raw: true });
+      if (!data.length) {
+        throw new Error('Selected sheet has no data rows.');
+      }
+
+      const headers = Object.keys(data[0]);
+      const detectedUser = detectColumn(headers, 'User ID');
+      const detectedMember = detectColumn(headers, 'Member ID');
+
+      if (!detectedUser || !detectedMember) {
+        throw new Error('Could not find required columns. The sheet must contain headers named exactly User ID and Member ID.');
+      }
+
+      userIdKey = detectedUser;
+      memberIdKey = detectedMember;
+      currentSheetName = sheetName;
+      originalData = data.map(row => ({ ...row }));
+      workingData = data.map(row => ({ ...row, __changed: false }));
+
+      rowsLoaded.textContent = String(workingData.length);
+      blanksFilled.textContent = '0';
+      unchangedCount.textContent = '0';
+      stillBlankCount.textContent = '0';
+      processBtn.disabled = false;
+      saveBtn.disabled = true;
+      renderPreview(workingData);
+      setStatus(`Loaded <b>${escapeHtml(sheetName)}</b>. Found columns <b>${escapeHtml(userIdKey)}</b> and <b>${escapeHtml(memberIdKey)}</b>. Ready to process.`, 'good');
+    }
+
+    fileInput.addEventListener('change', async () => {
+      resetAll();
+      const file = fileInput.files[0];
+      if (!file) return;
+      originalFileName = file.name;
+      saveName.value = file.name.replace(/\.(xlsx|xls|csv)$/i, '') + '_fixed.xlsx';
+      setStatus('Reading file...');
+      try {
+        workbook = await readWorkbook(file);
+        sheetSelect.innerHTML = '';
+        workbook.SheetNames.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          sheetSelect.appendChild(option);
+        });
+        sheetSelect.disabled = false;
+        setStatus(`File loaded. Found <b>${workbook.SheetNames.length}</b> sheet(s). Select the sheet if needed, then click <b>Load Selected Sheet</b>.`, 'good');
+      } catch (err) {
+        setStatus('Could not read that file. ' + escapeHtml(err.message), 'warn');
+      }
+    });
+
+    loadBtn.addEventListener('click', () => {
+      try {
+        if (!workbook) {
+          setStatus('Please choose a file first.', 'warn');
+          return;
+        }
+        loadSheetData(sheetSelect.value);
+      } catch (err) {
+        setStatus(escapeHtml(err.message), 'warn');
+      }
+    });
+
+    processBtn.addEventListener('click', () => {
+      if (!workingData.length) {
+        setStatus('No loaded rows to process.', 'warn');
+        return;
+      }
+
+      let filled = 0;
+      let unchanged = 0;
+      let stillBlank = 0;
+
+      workingData = workingData.map(row => {
+        const memberVal = String(row[memberIdKey] ?? '').trim();
+        const userVal = String(row[userIdKey] ?? '').trim();
+        const newRow = { ...row, __changed: false };
+
+        if (memberVal === '') {
+          if (userVal !== '') {
+            newRow[memberIdKey] = row[userIdKey];
+            newRow.__changed = true;
+            filled++;
+          } else {
+            stillBlank++;
+          }
+        } else {
+          unchanged++;
+        }
+        return newRow;
+      });
+
+      rowsLoaded.textContent = String(workingData.length);
+      blanksFilled.textContent = String(filled);
+      unchangedCount.textContent = String(unchanged);
+      stillBlankCount.textContent = String(stillBlank);
+      saveBtn.disabled = false;
+      renderPreview(workingData);
+      setStatus(`Processing complete. Filled <b>${filled}</b> blank Member ID cell(s). Existing Member ID values were left unchanged.`, 'good');
+    });
+
+    saveBtn.addEventListener('click', () => {
+      if (!workingData.length || !currentSheetName) {
+        setStatus('Nothing to save yet.', 'warn');
+        return;
+      }
+
+      let outName = saveName.value.trim();
+      if (!outName) outName = 'member_id_fixed.xlsx';
+      if (!/\.(xlsx|xlsm|xls)$/i.test(outName)) outName += '.xlsx';
+
+      // Build output by cloning the original worksheet and changing ONLY blank Member ID cells.
+      // This preserves existing date cells and number formats, including Next Payment Date.
+      const originalWs = workbook.Sheets[currentSheetName];
+      const outSheet = {};
+      Object.keys(originalWs).forEach(k => {
+        outSheet[k] = (typeof originalWs[k] === 'object' && originalWs[k] !== null) ? { ...originalWs[k] } : originalWs[k];
+      });
+
+      const range = XLSX.utils.decode_range(originalWs['!ref']);
+      const headers = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: range.s.r, c });
+        const cell = originalWs[cellAddr];
+        headers.push(cell ? String(cell.v ?? '').trim() : '');
+      }
+      const memberColIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g, ' ') === String(memberIdKey).toLowerCase().replace(/\s+/g, ' '));
+      const userColIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g, ' ') === String(userIdKey).toLowerCase().replace(/\s+/g, ' '));
+
+      if (memberColIndex < 0 || userColIndex < 0) {
+        setStatus('Could not locate User ID / Member ID columns in the original worksheet during save.', 'warn');
+        return;
+      }
+
+      for (let i = 0; i < workingData.length; i++) {
+        if (!workingData[i].__changed) continue;
+        const excelRow = range.s.r + 1 + i;
+        const memberAddr = XLSX.utils.encode_cell({ r: excelRow, c: memberColIndex });
+        const userAddr = XLSX.utils.encode_cell({ r: excelRow, c: userColIndex });
+        const userCell = originalWs[userAddr];
+        const userValue = workingData[i][userIdKey];
+
+        outSheet[memberAddr] = userCell
+          ? { ...userCell, v: userCell.v, w: undefined }
+          : { t: 's', v: String(userValue ?? '') };
+      }
+
+      const outBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(outBook, outSheet, currentSheetName);
+      XLSX.writeFile(outBook, outName, { bookType: 'xlsx', cellDates: true });
+      setStatus(`Saved corrected file as <b>${escapeHtml(outName)}</b>. Existing date formats were preserved as much as possible.`, 'good');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      saveName.value = 'member_id_fixed.xlsx';
+      resetAll();
+    });
+
+    resetAll();
+  </script>
+</body>
+</html>
